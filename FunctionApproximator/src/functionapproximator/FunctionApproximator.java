@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -23,7 +24,7 @@ public class FunctionApproximator extends Application{
     double y = 0;
     @Override
     public void start(Stage stage) throws Exception {
-        NNest.NN nn = new NNest().new NN(0.001,"relu","linear","quadratic","momentum",true,1,20,1);
+        NNest.NN nn = new NNest().new NN(0.001,"tanh","linear","quadratic","momentum",true,1,20,20,1);
         Group root = new Group();
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -117,6 +118,9 @@ public class FunctionApproximator extends Application{
         train.getChildren().addAll(sessionsLabel,sessionsText,sessionsEnter);
         train.setTranslateY(800);
         train.setTranslateX(10);
+        
+        VBox view = new VBox();
+        
         root.getChildren().addAll(chart,overlay,inputBox,train);
         inputBox.setTranslateX(700);
         Scene scene = new Scene(root,0,0);
