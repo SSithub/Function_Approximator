@@ -23,6 +23,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javax.swing.event.HyperlinkEvent;
 
 public class FunctionApproximator extends Application{
     double x = 0;
@@ -30,7 +31,7 @@ public class FunctionApproximator extends Application{
 //    double i = 0;
     @Override
     public void start(Stage stage) throws Exception {
-        NNest.NN nn = new NNest().new NN(0.001,"leakyrelu","tanh","quadratic","momentum",true,1,20,20,20,1);
+        NNest.NN nn = new NNest().new NN(0.001,"tanh","linear","quadratic","momentum",true,1,5,5,5,1);
         Group root = new Group();
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -67,21 +68,45 @@ public class FunctionApproximator extends Application{
         Text yLabel = new Text("Y Value");
         TextField xInput = new TextField();
         TextField yInput = new TextField();
-        Button pointEnter = new Button("Enter Point");
-        pointEnter.setOnAction(new EventHandler<ActionEvent>(){
+        xInput.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent t) {
                 try{
                     x = Double.parseDouble(xInput.getText());
                     y = Double.parseDouble(yInput.getText());
                     series.getData().add(new XYChart.Data<>(x, y));
-//                    function.getData().clear();
                 }
                 catch(NumberFormatException e){
                 }
             }
         });
-        inputBox.getChildren().addAll(xLabel,xInput,yLabel,yInput,pointEnter);
+        yInput.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent t) {
+                try{
+                    x = Double.parseDouble(xInput.getText());
+                    y = Double.parseDouble(yInput.getText());
+                    series.getData().add(new XYChart.Data<>(x, y));
+                }
+                catch(NumberFormatException e){
+                }
+            }
+        });
+//        Button pointEnter = new Button("Enter Point");
+//        pointEnter.setOnAction(new EventHandler<ActionEvent>(){
+//            @Override
+//            public void handle(ActionEvent t) {
+//                try{
+//                    x = Double.parseDouble(xInput.getText());
+//                    y = Double.parseDouble(yInput.getText());
+//                    series.getData().add(new XYChart.Data<>(x, y));
+////                    function.getData().clear();
+//                }
+//                catch(NumberFormatException e){
+//                }
+//            }
+//        });
+        inputBox.getChildren().addAll(xLabel,xInput,yLabel,yInput);
         inputBox.setHgap(-60);
         inputBox.setMaxSize(400,0);
         
@@ -108,24 +133,12 @@ public class FunctionApproximator extends Application{
 //        });
         
         HBox train = new HBox();
+        train.setSpacing(10);
         Text sessionsLabel = new Text("Sessions");
         TextField sessionsText = new TextField();
-        Button sessionsEnter = new Button("Train");
-        sessionsEnter.setOnAction(new EventHandler<ActionEvent>(){
+        sessionsText.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent t) {
-//                System.out.println(xAxis.getPrefHeight());
-//                System.out.println(xAxis.getLayoutX());
-//                System.out.println(xAxis.getZeroPosition());
-//                System.out.println(xAxis2.getPrefHeight());
-//                System.out.println(xAxis2.getLayoutX());
-//                System.out.println(xAxis2.getZeroPosition());
-//        System.out.println(xAxis.getScale());
-//        System.out.println(xAxis2.getScale());
-//        System.out.println(yAxis.getScale());
-//        System.out.println(yAxis2.getScale());
-                double xLower = xAxis.getLowerBound();
-                double xUpper = xAxis.getUpperBound();
                 try{
                     for(int i = 0; i < Integer.parseInt(sessionsText.getText()); i++){
                         int random = (int)(Math.random()*series.getData().size());
@@ -136,14 +149,47 @@ public class FunctionApproximator extends Application{
                 catch(NumberFormatException e){
                 }
                 function.getData().clear();
+                double xLower = xAxis.getLowerBound();
+                double xUpper = xAxis.getUpperBound();
                 for(double i = xLower; i < xUpper; i = i + (xUpper-xLower)/100){
-//                    System.out.println("in " + i);
                     function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0]));
-//                    System.out.println("out " + nn.feedforward(new float[][]{{(float)i}})[0][0]);
                 }
             }
         });
-        train.getChildren().addAll(sessionsLabel,sessionsText,sessionsEnter);
+//        Button sessionsEnter = new Button("Train");
+//        sessionsEnter.setOnAction(new EventHandler<ActionEvent>(){
+//            @Override
+//            public void handle(ActionEvent t) {
+////                System.out.println(xAxis.getPrefHeight());
+////                System.out.println(xAxis.getLayoutX());
+////                System.out.println(xAxis.getZeroPosition());
+////                System.out.println(xAxis2.getPrefHeight());
+////                System.out.println(xAxis2.getLayoutX());
+////                System.out.println(xAxis2.getZeroPosition());
+////        System.out.println(xAxis.getScale());
+////        System.out.println(xAxis2.getScale());
+////        System.out.println(yAxis.getScale());
+////        System.out.println(yAxis2.getScale());
+//                double xLower = xAxis.getLowerBound();
+//                double xUpper = xAxis.getUpperBound();
+//                try{
+//                    for(int i = 0; i < Integer.parseInt(sessionsText.getText()); i++){
+//                        int random = (int)(Math.random()*series.getData().size());
+//                        nn.backpropagation(new float[][]{{series.getData().get(random).getXValue().floatValue()}}, new float[][]{{series.getData().get(random).getYValue().floatValue()}});
+//                    }
+////                    System.out.println(NNest.globalCost);
+//                }
+//                catch(NumberFormatException e){
+//                }
+//                function.getData().clear();
+//                for(double i = xLower; i < xUpper; i = i + (xUpper-xLower)/100){
+////                    System.out.println("in " + i);
+//                    function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0]));
+////                    System.out.println("out " + nn.feedforward(new float[][]{{(float)i}})[0][0]);
+//                }
+//            }
+//        });
+        train.getChildren().addAll(sessionsLabel,sessionsText);
         train.setTranslateY(800);
         train.setTranslateX(10);
         
@@ -155,17 +201,16 @@ public class FunctionApproximator extends Application{
             public void handle(ActionEvent t) {
                 try{
 //                    xAxis2.setScaleX(xAxis.getScale());
-//                    System.out.println(nn.feedforward(new float[][]{{Float.parseFloat(inputVarField.getText())}})[0][0]);
-                    function.getData().clear();
-                    double xLower = xAxis.getLowerBound();
-                    double xUpper = xAxis.getUpperBound();
-//                    System.out.println(xLower);
-//                    System.out.println(xUpper);
-                    for(double i = xLower; i <= xUpper; i = i + (xUpper-xLower)/1000){
-    //                    System.out.println("in " + i);
-                        function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0]));
-    //                    System.out.println("out " + nn.feedforward(new float[][]{{(float)i}})[0][0]);
-                    }
+                    System.out.println(nn.feedforward(new float[][]{{Float.parseFloat(inputVarField.getText())}})[0][0]);
+//                    double xLower = xAxis.getLowerBound();
+//                    double xUpper = xAxis.getUpperBound();
+////                    System.out.println(xLower);
+////                    System.out.println(xUpper);
+//                    for(double i = xLower; i <= xUpper; i = i + (xUpper-xLower)/1000){
+//    //                    System.out.println("in " + i);
+//                        function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0]));
+//    //                    System.out.println("out " + nn.feedforward(new float[][]{{(float)i}})[0][0]);
+//                    }
 //                    System.out.println(xAxis.getScale());
 //                    System.out.println(xAxis2.getScale());
                 }
@@ -180,7 +225,7 @@ public class FunctionApproximator extends Application{
         root.getChildren().addAll(chart,inputBox,train,view);
         inputBox.setTranslateX(700);
         Scene scene = new Scene(root,0,0);
-//        scene.getStylesheets().add("functionapproximator/ScatterStyle.css");
+        scene.getStylesheets().add("functionapproximator/ScatterStyle.css");
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();

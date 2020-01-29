@@ -8,5 +8,7 @@ and open the template in the editor.
     Author     : ssit5
 */
 .default-color1.chart-symbol {
+    -fx-shape: "M 1 0 A 1 1 0 1 1 1 2 A 1 1 0 1 1 1 0 ";
+    -fx-background-radius: 1px;
     -fx-background-color: rgba(17,71,171,.3);
 }

@@ -15,13 +15,15 @@ public class NNest extends Application implements Serializable{
         private class Layer implements Serializable{
             float[][] weights;
             float[][] biases;
-            float[][] previousGradients;
+            float[][] previousGradientsW;
+            float[][] previousGradientsB;
             Layer(int previousNodes,int nodes){
                 weights = create(previousNodes,nodes,0);
                 biases = create(1,nodes,0);
                 weights = scale(randomize(weights,2,-1),(float)Math.sqrt(2.0/previousNodes));
                 biases = randomize(biases,2,-1);
-                previousGradients = create(previousNodes,nodes,0);
+                previousGradientsW = create(previousNodes,nodes,0);
+                previousGradientsB = create(1,nodes,0);
             }
         }
         ArrayList<Layer> network = new ArrayList<>();
@@ -157,22 +159,16 @@ public class NNest extends Application implements Serializable{
                 else
                     dC_dZ = multiply(dC_dA,dA_dZ);
                 dC_dW = dot(transpose(dZ_dW),dC_dZ);
-                costFunction.apply(copy(A.get(NETWORKSIZE)), targets).apply(false);//Update the cost to anneal the learning rate
-                //Square Root Annealing
-//                bGradients = scale(lr*Math.sqrt(cost)*Math.pow(10, -Math.pow(NETWORKSIZE,1/NETWORKSIZE)),dC_dZ);
-//                wGradients = scale(lr*Math.sqrt(cost)*Math.pow(10, -Math.pow(NETWORKSIZE,1/NETWORKSIZE)),dC_dW);
-//                float stabilizer = lr*Math.sqrt(cost)*Math.pow(10, -Math.pow(NETWORKSIZE, .8*Math.pow(NETWORKSIZE, -1)));
-//                float stabilizer = lr*Math.sqrt(cost) * Math.pow(10, -NETWORKSIZE);
-//                float stabilizer = lr*Math.sqrt(cost)* Math.pow(10, -NETWORKSIZE+2+(NETWORKSIZE*Math.E*(.02209*NETWORKSIZE-.0182)));
-//                float stabilizer = lr*Math.sqrt(cost)* Math.pow(10, -NETWORKSIZE+2+(NETWORKSIZE*Math.E*(.02209*NETWORKSIZE-.02)));
-//                float stabilizer = (float)(lr*Math.sqrt(cost)* Math.pow(10, -NETWORKSIZE+2+(NETWORKSIZE*Math.E*((.02+.0002*NETWORKSIZE)*NETWORKSIZE-(.02+.0002*NETWORKSIZE)))));
-                bGradients = scale((float)lr,dC_dZ);
-                wGradients = add(scale((float)lr,dC_dW),updater.apply(network.get(i-1).previousGradients));
-//                bGradients = scale(lr*cost,dC_dZ);
-//                wGradients = scale(lr*cost,dC_dW);
+                costFunction.apply(copy(A.get(NETWORKSIZE)), targets).apply(false);//Update the cost to track progress
+                //Optimizer/updater
+                bGradients = add(scale((float)lr,dC_dZ),updater.apply(network.get(i-1).previousGradientsB));
+                wGradients = add(scale((float)lr,dC_dW),updater.apply(network.get(i-1).previousGradientsW));
+                //Update weights and biases
                 network.get(i-1).biases = subtract(network.get(i-1).biases,bGradients);
                 network.get(i-1).weights = subtract(network.get(i-1).weights,wGradients);
-                network.get(i-1).previousGradients = wGradients;
+                //Save old gradients
+                network.get(i-1).previousGradientsW = wGradients;
+                network.get(i-1).previousGradientsB = bGradients;
                 if(outputLayer){
                     outputLayer = false;
                 }
