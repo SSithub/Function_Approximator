@@ -1,37 +1,37 @@
 package functionapproximator;
 
-import java.util.List;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
-import javafx.scene.chart.ValueAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javax.swing.event.HyperlinkEvent;
 
 public class FunctionApproximator extends Application{
     double x = 0;
     double y = 0;
-//    double i = 0;
+    int shrink = 1;
+    double lower = 0;
+    double upper = 0;
+    double maxX = Double.NEGATIVE_INFINITY;
+    double maxY = Double.NEGATIVE_INFINITY;
+    double minX = Double.POSITIVE_INFINITY;
+    double minY = Double.POSITIVE_INFINITY;
+    Scene functionWindow;
+    Stage stage1;
     @Override
     public void start(Stage stage) throws Exception {
-        NNest.NN nn = new NNest().new NN(0.001,"tanh","linear","quadratic","momentum",true,1,5,5,5,1);
+        NNest.NN nn = new NNest().new NN(0.001,"tanh","tanh","quadratic","momentum",true,1,20,1);
         Group root = new Group();
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -75,6 +75,10 @@ public class FunctionApproximator extends Application{
                     x = Double.parseDouble(xInput.getText());
                     y = Double.parseDouble(yInput.getText());
                     series.getData().add(new XYChart.Data<>(x, y));
+                    function.getData().clear();
+                    int temp = (int)Math.pow(10, (int)(Math.log10(y)+1));
+                    if(temp > shrink)
+                        shrink = temp;
                 }
                 catch(NumberFormatException e){
                 }
@@ -87,6 +91,18 @@ public class FunctionApproximator extends Application{
                     x = Double.parseDouble(xInput.getText());
                     y = Double.parseDouble(yInput.getText());
                     series.getData().add(new XYChart.Data<>(x, y));
+                    function.getData().clear();
+                    int temp = (int)Math.pow(10, (int)(Math.log10(y)+1));
+                    if(temp > shrink)
+                        shrink = temp;
+//                    if(x < minX)
+//                        minX = x;
+//                    if(x > maxX)
+//                        maxX = x;
+//                    if(y < minY)
+//                        minY = y;
+//                    if(y > maxY)
+//                        maxY = y;
                 }
                 catch(NumberFormatException e){
                 }
@@ -113,22 +129,8 @@ public class FunctionApproximator extends Application{
 //        yAxis.upperBoundProperty().addListener(new ChangeListener<Number>() {//x axis changes first, then the y axis, so listener goes on the y axis
 //            @Override
 //            public void changed(ObservableValue<? extends Number> ov, Number t, Number t1) {
-//                double xLower = xAxis.getLowerBound();
-//                double xUpper = xAxis.getUpperBound();
-//                xAxis2.setUpperBound(xUpper);
-//                yAxis2.setUpperBound(yAxis.getUpperBound());
-//                xAxis2.setTickUnit(xAxis.getTickUnit());
-//                yAxis2.setTickUnit(yAxis.getTickUnit());
-//                xAxis2.setTickLength(xAxis.getTickLength());
-//                yAxis2.setTickLength(xAxis.getTickLength());
-//                xAxis2.setLayoutX(xAxis.getLayoutX());
-//                xAxis2.setLayoutY(xAxis.getLayoutY());
-//                yAxis2.setLayoutX(yAxis.getLayoutX());
-//                yAxis2.setLayoutY(yAxis.getLayoutY());
-////                function.getData().clear();
-////                for(double i = xLower; i <= xUpper; i = i + (xUpper-xLower)/100){
-////                    function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0]));
-////                }
+//                lower = xAxis.getLowerBound();
+//                upper = xAxis.getUpperBound();
 //            }
 //        });
         
@@ -142,17 +144,17 @@ public class FunctionApproximator extends Application{
                 try{
                     for(int i = 0; i < Integer.parseInt(sessionsText.getText()); i++){
                         int random = (int)(Math.random()*series.getData().size());
-                        nn.backpropagation(new float[][]{{series.getData().get(random).getXValue().floatValue()}}, new float[][]{{series.getData().get(random).getYValue().floatValue()}});
+                        nn.backpropagation(new float[][]{{series.getData().get(random).getXValue().floatValue()/shrink}}, new float[][]{{series.getData().get(random).getYValue().floatValue()/shrink}});
                     }
 //                    System.out.println(NNest.globalCost);
                 }
-                catch(NumberFormatException e){
+                catch(Exception e){
                 }
                 function.getData().clear();
                 double xLower = xAxis.getLowerBound();
                 double xUpper = xAxis.getUpperBound();
-                for(double i = xLower; i < xUpper; i = i + (xUpper-xLower)/100){
-                    function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0]));
+                for(double i = xLower + (xUpper-xLower)/100; i < xUpper - (xUpper-xLower)/100; i = i + (xUpper-xLower)/100){
+                    function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)(i/shrink)}})[0][0]*shrink));
                 }
             }
         });
@@ -201,7 +203,7 @@ public class FunctionApproximator extends Application{
             public void handle(ActionEvent t) {
                 try{
 //                    xAxis2.setScaleX(xAxis.getScale());
-                    System.out.println(nn.feedforward(new float[][]{{Float.parseFloat(inputVarField.getText())}})[0][0]);
+                    System.out.println(shrink*nn.feedforward(new float[][]{{Float.parseFloat(inputVarField.getText())}})[0][0]/shrink);
 //                    double xLower = xAxis.getLowerBound();
 //                    double xUpper = xAxis.getUpperBound();
 ////                    System.out.println(xLower);
@@ -221,31 +223,82 @@ public class FunctionApproximator extends Application{
         view.getChildren().addAll(inputVar,inputVarField);
         view.setTranslateX(1100);
         
+        Group window = new Group();
+        Button getFunction = new Button("Get Function");
+        getFunction.setTranslateX(300);
+        getFunction.setTranslateY(800);
+        getFunction.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                Text activationFunction = new Text("T(x) = (e^x - e^-x)/(e^x + e^-x)");
+                activationFunction.setTranslateY(25);
+                TextArea functionTextField = new TextArea();
+                functionTextField.setPrefSize(800, 750);
+                functionTextField.setTranslateY(50);
+                String functionString = "";
+                functionString += "(" + shrink + ")T(";
+                for(int i = 0; i < nn.getNetworkLayer(0).biases[0].length; i++){
+                    functionString += "[" + nn.getNetworkLayer(1).weights[i][0] + "]T(" + nn.getNetworkLayer(0).weights[0][i] + "x + " + nn.getNetworkLayer(0).biases[0][i] + ")";
+                    if(i != nn.getNetworkLayer(0).biases[0].length-1)
+                        functionString += " + ";
+                }
+                functionString += " + " + nn.getNetworkLayer(1).biases[0][0] + ")";
+                functionTextField.setText(functionString);
+                window.getChildren().addAll(functionTextField,activationFunction);
+                try{
+                    stage1 = new Stage();
+                    functionWindow = new Scene(window,800,800);
+                    stage1.setScene(functionWindow);
+                }
+                catch(Exception e){
+                    stage1.setScene(functionWindow);
+                }
+                stage1.show();
+            }
+        });
+        
 //        root.getChildren().addAll(chart,overlay,inputBox,train,view);
-        root.getChildren().addAll(chart,inputBox,train,view);
+        root.getChildren().addAll(chart,inputBox,train,view,getFunction);
         inputBox.setTranslateX(700);
         Scene scene = new Scene(root,0,0);
         scene.getStylesheets().add("functionapproximator/ScatterStyle.css");
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();
-//        new Thread(()->{
+//        t = new Thread(()->{
 //            while(true){
 //                try{
-//                    Thread.sleep(5000);
-//                    for(int i = 0; i < 1000; i++){
+//                    Thread.sleep(1000);
+//                    for(int i = 0; i < 10000; i++){
 //                        int random = (int)(Math.random()*series.getData().size());
-//                        nn.backpropagation(new float[][]{{series.getData().get(random).getXValue().floatValue()}}, new float[][]{{series.getData().get(random).getYValue().floatValue()}});
+//                        nn.backpropagation(new float[][]{{series.getData().get(random).getXValue().floatValue()/shrink}}, new float[][]{{series.getData().get(random).getYValue().floatValue()/shrink}});
 //                    }
-//                    function.getData().clear();
-//                    for(i = xAxis.getLowerBound(); i <= xAxis.getUpperBound(); i = i + (xAxis.getUpperBound()-xAxis.getLowerBound())/100){
-//                        Platform.runLater(() -> function.getData().add(new XYChart.Data<>(i,nn.feedforward(new float[][]{{(float)i}})[0][0])));
+//                    Platform.runLater(() -> {
+//                        function.getData().clear();
+//                        for(double i = minX-(maxX-minX)/10; i <= maxX+(maxX-minX)/10; i = i + (maxX-minX+.0001)/100){
+//                            function.getData().add(new XYChart.Data<>(i*shrink,nn.feedforward(new float[][]{{(float)i*shrink}})[0][0]));
+//                        }
+//                        synchronized(lock){
+//                            try{
+//                                lock.notifyAll();
+//                            }
+//                            catch(Exception e){
+//                                
+//                            }
+//                            System.out.println("notify");
+//                        }
+//                    });
+//                    synchronized(lock){
+//                        lock.wait();
+//                        System.out.println("wait");
 //                    }
 //                }
 //                catch(Exception e){
+//                    e.printStackTrace();
 //                }
 //            }
-//        }).start();
+//        });
+//        t.start();
     }
     public static void main(String[] args) {
         launch(args);

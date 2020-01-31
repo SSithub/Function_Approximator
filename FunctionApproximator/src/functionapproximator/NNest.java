@@ -12,7 +12,7 @@ public class NNest extends Application implements Serializable{
     private volatile static int increment = 0;
     private static boolean graphMeasuresAccuracy;
     public class NN implements Serializable{
-        private class Layer implements Serializable{
+        public class Layer implements Serializable{
             float[][] weights;
             float[][] biases;
             float[][] previousGradientsW;
@@ -88,6 +88,15 @@ public class NNest extends Application implements Serializable{
             networkLayers += network.get(NETWORKSIZE-1).weights[0].length;
             return networkLayers;
         }
+        public Layer getNetworkLayer(int layerIndex){//Layer 0 is the first hidden layer
+            try{
+                return network.get(layerIndex);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            return null;
+        }
         public void save(){
             try{
                 FileOutputStream fileOut = new FileOutputStream(System.getProperty("user.dir") + "/neuralnetwork(" + this.getNetworkLayers() + ").ser");
@@ -160,7 +169,7 @@ public class NNest extends Application implements Serializable{
                     dC_dZ = multiply(dC_dA,dA_dZ);
                 dC_dW = dot(transpose(dZ_dW),dC_dZ);
                 costFunction.apply(copy(A.get(NETWORKSIZE)), targets).apply(false);//Update the cost to track progress
-                //Optimizer/updater
+                //Optimizer or updater
                 bGradients = add(scale((float)lr,dC_dZ),updater.apply(network.get(i-1).previousGradientsB));
                 wGradients = add(scale((float)lr,dC_dW),updater.apply(network.get(i-1).previousGradientsW));
                 //Update weights and biases
@@ -663,7 +672,7 @@ public class NNest extends Application implements Serializable{
         xAxis.setAnimated(false);
         xAxis.setLabel("Training Sessions");
         yAxis.setAnimated(false);
-        yAxis.setLabel(costVSAccuracy ? "Cost" : "Accuracy"); 
+        yAxis.setLabel(costVSAccuracy ? "Accuracy" : "Cost"); 
         XYChart.Series<Number, Number> series = new XYChart.Series<>();
         series.setName(yAxis.getLabel() + " over " + xAxis.getLabel());
         ScatterChart<Number, Number> chart = new ScatterChart<>(xAxis, yAxis);
