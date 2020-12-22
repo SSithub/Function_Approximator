@@ -278,27 +278,27 @@ public class Components {
             functionData.getData().clear();
             functionLine.getData().clear();
             boolean invalidField = false;
-                try {
-                    Integer.parseInt(numberOfPointsField.getText());
-                    numberOfPointsLabel.setFill(Color.BLACK);
-                } catch (NumberFormatException e) {
-                    numberOfPointsLabel.setFill(Color.RED);
-                    invalidField = true;
-                }
-                try {
-                    Double.parseDouble(centerField.getText());
-                    centerLabel.setFill(Color.BLACK);
-                } catch (NumberFormatException e) {
-                    centerLabel.setFill(Color.RED);
-                    invalidField = true;
-                }
-                try {
-                    Double.parseDouble(gapBetweenPointsField.getText());
-                    gapBetweenPointsLabel.setFill(Color.BLACK);
-                } catch (NumberFormatException e) {
-                    gapBetweenPointsLabel.setFill(Color.RED);
-                    invalidField = true;
-                }
+            try {
+                Integer.parseInt(numberOfPointsField.getText());
+                numberOfPointsLabel.setFill(Color.BLACK);
+            } catch (NumberFormatException e) {
+                numberOfPointsLabel.setFill(Color.RED);
+                invalidField = true;
+            }
+            try {
+                Double.parseDouble(centerField.getText());
+                centerLabel.setFill(Color.BLACK);
+            } catch (NumberFormatException e) {
+                centerLabel.setFill(Color.RED);
+                invalidField = true;
+            }
+            try {
+                Double.parseDouble(gapBetweenPointsField.getText());
+                gapBetweenPointsLabel.setFill(Color.BLACK);
+            } catch (NumberFormatException e) {
+                gapBetweenPointsLabel.setFill(Color.RED);
+                invalidField = true;
+            }
             if (functions.getValue() != "None") {
                 Function1D desiredFunction = namesWithFunctions.get(functions.getValue());
                 if (!invalidField) {
