@@ -9,7 +9,7 @@ public class NNFunction {
 
     private float learningRate = .0001f;
     private LossFunction lossFunction = LossFunctions.QUADRATIC(.5);
-    private Optimizer optimizer = Optimizers.AMSGRAD;
+    private Optimizer optimizer = Optimizers.ADAM;
     private Activation activation = Activations.TANH;
     private NN nn;
     private float scale = 1;

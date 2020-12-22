@@ -196,7 +196,7 @@ public class Components {
             functionLine.getData().clear();
             double xLower = xAxis.getLowerBound();
             double xUpper = xAxis.getUpperBound();
-            double increment = (xUpper - xLower) / 500;
+            double increment = (xUpper - xLower) / 700;
             for (double i = xLower + 10 * increment; i < xUpper - 10 * increment; i += increment) {
                 float approxY = function.evaluate((float) i);
                 functionLine.getData().add(new XYChart.Data<>(i, approxY));
@@ -249,13 +249,13 @@ public class Components {
     public static VBox createDataBox(XYChart.Series<Number, Number> functionData, XYChart.Series<Number, Number> functionLine) {
         Text numberOfPointsLabel = new Text("Number of points");
         TextField numberOfPointsField = new TextField();
-        numberOfPointsField.setText("1000");
+        numberOfPointsField.setText("500");
         Text centerLabel = new Text("Center");
         TextField centerField = new TextField();
         centerField.setText("0");
         Text gapBetweenPointsLabel = new Text("Gap between points");
         TextField gapBetweenPointsField = new TextField();
-        gapBetweenPointsField.setText(".1");
+        gapBetweenPointsField.setText(".05");
         TilePane parameterFields = new TilePane(numberOfPointsLabel, numberOfPointsField, centerLabel, centerField, gapBetweenPointsLabel, gapBetweenPointsField);
         parameterFields.setPrefColumns(2);
         parameterFields.setPrefRows(3);
