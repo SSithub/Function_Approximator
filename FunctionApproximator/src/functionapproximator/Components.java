@@ -1,5 +1,11 @@
 package functionapproximator;
 
+import functionapproximator.NNlib.Activations;
+import functionapproximator.NNlib.Activations.Activation;
+import functionapproximator.NNlib.LossFunctions;
+import functionapproximator.NNlib.LossFunctions.LossFunction;
+import functionapproximator.NNlib.Optimizers;
+import functionapproximator.NNlib.Optimizers.Optimizer;
 import java.util.HashMap;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -20,6 +26,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -32,6 +39,7 @@ public class Components {
     public static final double screenHeight = Screen.getPrimary().getVisualBounds().getHeight();
     public static final double chartWidth = screenWidth * 2 / 3;
     public static final double chartHeight = screenHeight * 2 / 3;
+    private static int numberOfSamples = 100;
 
     public static void createShowFunction(NNFunction function, Stage functionStage) {
         Text activationFunction = new Text("t(x) = (e^x - e^-x)/(e^x + e^-x)");
@@ -65,6 +73,8 @@ public class Components {
         functionLine.setName("Function");
         chart.getData().addAll(functionData, functionLine);
         chart.setAnimated(false);
+        xAxis.setLowerBound(-30);
+        xAxis.setUpperBound(30);
         return chart;
     }
 
@@ -74,26 +84,20 @@ public class Components {
         Text yLabel = new Text("Y Value");
         TextField xInput = new TextField();
         TextField yInput = new TextField();
-        xInput.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                try {
-                    double x = Double.parseDouble(xInput.getText());
-                    double y = Double.parseDouble(yInput.getText());
-                    data.getData().add(new XYChart.Data<>(x, y));
-                } catch (NumberFormatException e) {
-                }
+        xInput.setOnAction((t) -> {
+            try {
+                double x = Double.parseDouble(xInput.getText());
+                double y = Double.parseDouble(yInput.getText());
+                data.getData().add(new XYChart.Data<>(x, y));
+            } catch (NumberFormatException e) {
             }
         });
-        yInput.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                try {
-                    double x = Double.parseDouble(xInput.getText());
-                    double y = Double.parseDouble(yInput.getText());
-                    data.getData().add(new XYChart.Data<>(x, y));
-                } catch (NumberFormatException e) {
-                }
+        yInput.setOnAction((t) -> {
+            try {
+                double x = Double.parseDouble(xInput.getText());
+                double y = Double.parseDouble(yInput.getText());
+                data.getData().add(new XYChart.Data<>(x, y));
+            } catch (NumberFormatException e) {
             }
         });
         insertPointBox.getChildren().addAll(xLabel, xInput, yLabel, yInput);
@@ -102,7 +106,7 @@ public class Components {
         //Add a title
         Text titleLabel = new Text("Insert Point");
         VBox inputBox = new VBox(titleLabel, insertPointBox);
-        //Translations
+        //Adjustments
         inputBox.setAlignment(Pos.CENTER);
         inputBox.setSpacing(10);
         inputBox.setTranslateX(-51);
@@ -138,7 +142,7 @@ public class Components {
             }
         });
         train.getChildren().addAll(sessionsLabel, sessionsText);
-        //Translations
+        //Adjustments
         train.setTranslateX(10);
         return train;
     }
@@ -151,14 +155,14 @@ public class Components {
                 createShowFunction(function, functionStage);
             }
         });
-        //Translations
+        //Adjustments
         getFunctionButton.setTranslateX(265);
         return getFunctionButton;
     }
 
     public static Group createTrainingRelatedGroup(NNFunction function, Stage functionStage, XYChart.Series<Number, Number> functionData, XYChart.Series<Number, Number> functionLine, NumberAxis xAxis) {
         Group group = new Group(createTrainingBox(function, functionData, functionLine, xAxis), createGetFunctionButton(function, functionStage));
-        //Translations
+        //Adjustments
         group.setTranslateY(chartHeight + 135);
         return group;
     }
@@ -183,9 +187,9 @@ public class Components {
     }
 
     public static Timeline createUpdateContinuouslyLoop(NNFunction function, XYChart.Series<Number, Number> functionData, XYChart.Series<Number, Number> functionLine, NumberAxis xAxis) {
-        Timeline update = new Timeline(new KeyFrame(Duration.millis(16), eh -> {
+        Timeline update = new Timeline(new KeyFrame(Duration.millis(50), eh -> {
             try {
-                for (int i = 0; i < 50; i++) {
+                for (int i = 0; i < numberOfSamples; i++) {
                     int random = (int) (Math.random() * functionData.getData().size());
                     float x = functionData.getData().get(random).getXValue().floatValue();
                     float y = functionData.getData().get(random).getYValue().floatValue();
@@ -206,7 +210,7 @@ public class Components {
         return update;
     }
 
-    public static HBox createUpdateLoopCheckBox(Timeline updateLoop) {
+    public static Group createUpdateLoopCheckBox(Timeline updateLoop) {
         CheckBox checkBox = new CheckBox();
         checkBox.setTranslateX(100);
         checkBox.setOnAction((t) -> {
@@ -216,13 +220,161 @@ public class Components {
                 updateLoop.stop();
             }
         });
+        TextField rateField = new TextField("100");
+        Text rateLabel = new Text("# of samples to train on every 50ms");
         Text label = new Text("Train Continuously");
-        HBox checkBoxWithLabel = new HBox(label, checkBox);
-        //Translations
-        checkBoxWithLabel.setSpacing(-95);
-        checkBoxWithLabel.setTranslateX(400);
-        checkBoxWithLabel.setTranslateY(chartHeight + 140);
+        Group checkBoxWithLabel = new Group(label, checkBox, rateLabel, rateField);
+        rateField.setOnAction((t) -> {
+            if (isFieldParsableInt(rateField, rateLabel)) {
+                numberOfSamples = Integer.parseInt(rateField.getText());
+            }
+        });
+        //Adjustments
+        checkBox.setTranslateX(130);
+        checkBox.setTranslateY(-15);
+        rateLabel.setTranslateY(20);
+        rateField.setTranslateX(240);
+        checkBoxWithLabel.setTranslateX(450);
+        checkBoxWithLabel.setTranslateY(chartHeight + 145);
         return checkBoxWithLabel;
+    }
+
+    public static VBox createDataBox(XYChart.Series<Number, Number> functionData, XYChart.Series<Number, Number> functionLine) {
+        Text numberOfPointsLabel = new Text("Number of points");
+        TextField numberOfPointsField = new TextField("500");//default
+        Text centerLabel = new Text("Center");
+        TextField centerField = new TextField("0");//default
+        Text gapBetweenPointsLabel = new Text("Gap between points");
+        TextField gapBetweenPointsField = new TextField(".1");//default
+        TilePane parameterFields = new TilePane(numberOfPointsLabel, numberOfPointsField, centerLabel, centerField, gapBetweenPointsLabel, gapBetweenPointsField);
+        parameterFields.setPrefColumns(2);
+        parameterFields.setPrefRows(3);
+        parameterFields.setHgap(-24);
+        parameterFields.setTranslateX(-35);
+
+        HashMap<String, Function1D> functions = new HashMap();
+        functions.put("Sine", new Function1D((x) -> Math.sin(x)));
+        functions.put("Cosine", new Function1D((x) -> Math.cos(x)));
+        functions.put("Arctan", new Function1D((x) -> Math.atan(x)));
+        functions.put("Tanh", new Function1D((x) -> Math.tanh(x)));
+        functions.put("Sigmoid", new Function1D((x) -> 1 / (1 + Math.exp(-2 * x))));
+        functions.put("x", new Function1D((x) -> Math.pow(x, 1)));
+        functions.put("x^2", new Function1D((x) -> Math.pow(x, 2)));
+        functions.put("x^3", new Function1D((x) -> Math.pow(x, 3)));
+        ComboBox functionsBox = new ComboBox();
+        functionsBox.getItems().addAll("None", "Sine", "Cosine", "Arctan", "Tanh", "Sigmoid", "x", "x^2", "x^3");
+        functionsBox.setValue("None");
+        functionsBox.setOnHiding((t) -> {
+            functionData.getData().clear();
+            functionLine.getData().clear();
+            boolean validFields = andAll(isFieldParsableInt(numberOfPointsField, numberOfPointsLabel),
+                    isFieldParsableDouble(centerField, centerLabel),
+                    isFieldParsableDouble(gapBetweenPointsField, gapBetweenPointsLabel));
+            if (functionsBox.getValue() != "None" && validFields) {
+                Function1D desiredFunction = functions.get(functionsBox.getValue());
+                addData(functionData, generatePointsFromFunction(desiredFunction,
+                        Integer.parseInt(numberOfPointsField.getText()),
+                        Double.parseDouble(centerField.getText()),
+                        Double.parseDouble(gapBetweenPointsField.getText()))
+                );
+            }
+        });
+
+        Text databoxLabel = new Text("Create Preset Data (will clear current points)");
+
+        VBox dataBox = new VBox(databoxLabel, functionsBox, parameterFields);
+        //Adjustments
+        dataBox.setTranslateX(chartWidth + 10);
+        return dataBox;
+    }
+
+    public static VBox createHyperParameterBox(NNFunction nnfunction) {
+        //Labels
+        Text seedLabel = new Text("Seed");
+        Text hiddenLayerNodesLabel = new Text("Hidden Layer Nodes");
+        Text activationLabel = new Text("Activation Function");
+        Text lossFunctionLabel = new Text("Loss Function");
+        Text learningRateLabel = new Text("Learning Rate");
+        Text optimizerLabel = new Text("Optimizer");
+        //Method of inputting parameters
+        TextField seedInput = new TextField("0");
+        TextField hiddenLayerNodesInput = new TextField("10");
+        ComboBox activationInput = new ComboBox();
+        ComboBox lossFunctionInput = new ComboBox();
+        TextField learningRateInput = new TextField(".001");
+        ComboBox optimizerInput = new ComboBox();
+        activationInput.setValue("Sigmoid");
+        lossFunctionInput.setValue("Quadratic");
+        optimizerInput.setValue("Vanilla");
+        //Maps for ComboBoxes
+        HashMap<String, Activation> activations = new HashMap<>();
+        activations.put("Sigmoid", Activations.SIGMOID);
+        activations.put("Tanh", Activations.TANH);
+        activations.put("ReLU", Activations.RELU);
+        activations.put("LeakyReLU", Activations.RELU);
+        activations.put("Swish", Activations.SWISH);
+        activations.put("Mish", Activations.MISH);
+        HashMap<String, LossFunction> lossFunctions = new HashMap<>();
+        lossFunctions.put("Quadratic", LossFunctions.QUADRATIC(.5));
+        lossFunctions.put("Huber", LossFunctions.HUBER(.5));
+        lossFunctions.put("HuberPseudo", LossFunctions.HUBERPSEUDO(.5));
+        HashMap<String, Optimizer> optimizers = new HashMap<>();
+        optimizers.put("Vanilla", Optimizers.VANILLA);
+        optimizers.put("Momentum", Optimizers.MOMENTUM);
+        optimizers.put("Nesterov", Optimizers.NESTEROV);
+        optimizers.put("AdaGrad", Optimizers.ADAGRAD);
+        optimizers.put("RMSProp", Optimizers.RMSPROP);
+        optimizers.put("AdaDelta", Optimizers.ADADELTA);
+        optimizers.put("Adam", Optimizers.ADAM);
+        optimizers.put("NAdam", Optimizers.NADAM);
+        optimizers.put("AdaMax", Optimizers.ADAMAX);
+        optimizers.put("AMSGrad", Optimizers.AMSGRAD);
+        activationInput.getItems().addAll("Sigmoid", "Tanh", "ReLU", "LeakyReLU", "Swish", "Mish");
+        lossFunctionInput.getItems().addAll("Quadratic", "Huber", "HuberPseudo");
+        optimizerInput.getItems().addAll("Vanilla", "Momentum", "Nesterov", "AdaGrad", "RMSProp", "AdaDelta", "Adam", "NAdam", "AdaMax", "AMSGrad");
+        TilePane hyperParameterTiles = new TilePane(seedLabel, hiddenLayerNodesLabel, activationLabel, lossFunctionLabel, learningRateLabel, optimizerLabel,
+                seedInput, hiddenLayerNodesInput, activationInput, lossFunctionInput, learningRateInput, optimizerInput
+        );
+        Button newNNFunctionButton = new Button("Create New Neural Network From Selected Hyperparameters");
+        Text info = new Text(" (Learning rate and loss function can be changed anytime)");
+        HBox newNNFunctionBox = new HBox(newNNFunctionButton, info);
+        VBox hyperParameterBox = new VBox(hyperParameterTiles, newNNFunctionBox);
+        //Actions
+        learningRateInput.setOnAction((t) -> {
+            if (isFieldParsableDouble(learningRateInput, learningRateLabel)) {
+                nnfunction.setLearningRateDirectly(Float.parseFloat(learningRateInput.getText()));
+            }
+        });
+        lossFunctionInput.setOnHiding((t) -> {
+            nnfunction.setLossFunction(lossFunctions.get(lossFunctionInput.getValue()));
+        });
+        newNNFunctionButton.setOnAction((t) -> {
+            if (andAll(isFieldParsableLong(seedInput, seedLabel),
+                    isFieldParsableInt(hiddenLayerNodesInput, hiddenLayerNodesLabel),
+                    isFieldParsableFloat(learningRateInput, learningRateLabel))) {
+                nnfunction.setHyperParameters(Long.parseLong(seedInput.getText()),
+                        Integer.parseInt(hiddenLayerNodesInput.getText()),
+                        activations.get(activationInput.getValue()),
+                        lossFunctions.get(lossFunctionInput.getValue()),
+                        Float.parseFloat(learningRateInput.getText()),
+                        optimizers.get(optimizerInput.getValue())
+                );
+            }
+        });
+        //Adjustments
+        info.setFont(Font.font(23));
+        double prefWidth = 150;
+        seedInput.setMaxWidth(prefWidth);
+        hiddenLayerNodesInput.setMaxWidth(prefWidth);
+        activationInput.setMaxWidth(prefWidth);
+        lossFunctionInput.setMaxWidth(prefWidth);
+        learningRateInput.setMaxWidth(prefWidth);
+        optimizerInput.setMaxWidth(prefWidth);
+        hyperParameterTiles.setPrefRows(2);
+        hyperParameterTiles.setPrefColumns(6);
+        hyperParameterBox.setTranslateX(300);
+        hyperParameterBox.setTranslateY(chartHeight);
+        return hyperParameterBox;
     }
 
     //Helpers
@@ -246,76 +398,56 @@ public class Components {
         }
     }
 
-    public static VBox createDataBox(XYChart.Series<Number, Number> functionData, XYChart.Series<Number, Number> functionLine) {
-        Text numberOfPointsLabel = new Text("Number of points");
-        TextField numberOfPointsField = new TextField();
-        numberOfPointsField.setText("500");
-        Text centerLabel = new Text("Center");
-        TextField centerField = new TextField();
-        centerField.setText("0");
-        Text gapBetweenPointsLabel = new Text("Gap between points");
-        TextField gapBetweenPointsField = new TextField();
-        gapBetweenPointsField.setText(".05");
-        TilePane parameterFields = new TilePane(numberOfPointsLabel, numberOfPointsField, centerLabel, centerField, gapBetweenPointsLabel, gapBetweenPointsField);
-        parameterFields.setPrefColumns(2);
-        parameterFields.setPrefRows(3);
-        parameterFields.setHgap(-24);
-        parameterFields.setTranslateX(-35);
+    private static boolean isFieldParsableInt(TextField tf, Text t) {
+        try {
+            Integer.parseInt(tf.getText());
+            t.setFill(Color.BLACK);
+            return true;
+        } catch (NumberFormatException e) {
+            t.setFill(Color.RED);
+            return false;
+        }
+    }
 
-        HashMap<String, Function1D> namesWithFunctions = new HashMap();
-        namesWithFunctions.put("Sine", new Function1D((x) -> Math.sin(x)));
-        namesWithFunctions.put("Cosine", new Function1D((x) -> Math.cos(x)));
-        namesWithFunctions.put("Arctan", new Function1D((x) -> Math.atan(x)));
-        namesWithFunctions.put("Tanh", new Function1D((x) -> Math.tanh(x)));
-        namesWithFunctions.put("Sigmoid", new Function1D((x) -> 1 / (1 + Math.exp(-2 * x))));
-        namesWithFunctions.put("x", new Function1D((x) -> Math.pow(x, 1)));
-        namesWithFunctions.put("x^2", new Function1D((x) -> Math.pow(x, 2)));
-        namesWithFunctions.put("x^3", new Function1D((x) -> Math.pow(x, 3)));
-        ComboBox functions = new ComboBox();
-        functions.getItems().addAll("None", "Sine", "Cosine", "Arctan", "Tanh", "Sigmoid", "x", "x^2", "x^3");
-        functions.setValue("None");
-        functions.setOnAction((t) -> {
-            functionData.getData().clear();
-            functionLine.getData().clear();
-            boolean invalidField = false;
-            try {
-                Integer.parseInt(numberOfPointsField.getText());
-                numberOfPointsLabel.setFill(Color.BLACK);
-            } catch (NumberFormatException e) {
-                numberOfPointsLabel.setFill(Color.RED);
-                invalidField = true;
-            }
-            try {
-                Double.parseDouble(centerField.getText());
-                centerLabel.setFill(Color.BLACK);
-            } catch (NumberFormatException e) {
-                centerLabel.setFill(Color.RED);
-                invalidField = true;
-            }
-            try {
-                Double.parseDouble(gapBetweenPointsField.getText());
-                gapBetweenPointsLabel.setFill(Color.BLACK);
-            } catch (NumberFormatException e) {
-                gapBetweenPointsLabel.setFill(Color.RED);
-                invalidField = true;
-            }
-            if (functions.getValue() != "None") {
-                Function1D desiredFunction = namesWithFunctions.get(functions.getValue());
-                if (!invalidField) {
-                    addData(functionData, generatePointsFromFunction(desiredFunction,
-                            Integer.parseInt(numberOfPointsField.getText()),
-                            Double.parseDouble(centerField.getText()),
-                            Double.parseDouble(gapBetweenPointsField.getText()))
-                    );
-                }
-            }
-        });
+    private static boolean isFieldParsableLong(TextField tf, Text t) {
+        try {
+            Long.parseLong(tf.getText());
+            t.setFill(Color.BLACK);
+            return true;
+        } catch (NumberFormatException e) {
+            t.setFill(Color.RED);
+            return false;
+        }
+    }
 
-        Text databoxLabel = new Text("Create Preset Data (will clear current points)");
+    private static boolean isFieldParsableFloat(TextField tf, Text t) {
+        try {
+            Float.parseFloat(tf.getText());
+            t.setFill(Color.BLACK);
+            return true;
+        } catch (NumberFormatException e) {
+            t.setFill(Color.RED);
+            return false;
+        }
+    }
 
-        VBox dataBox = new VBox(databoxLabel, functions, parameterFields);
-        //Translations
-        dataBox.setTranslateX(chartWidth + 10);
-        return dataBox;
+    private static boolean isFieldParsableDouble(TextField tf, Text t) {
+        try {
+            Double.parseDouble(tf.getText());
+            t.setFill(Color.BLACK);
+            return true;
+        } catch (NumberFormatException e) {
+            t.setFill(Color.RED);
+            return false;
+        }
+    }
+
+    private static boolean andAll(boolean... booleans) {
+        boolean result = true;
+        int size = booleans.length;
+        for (int i = 0; i < size; i++) {
+            result = result && booleans[i];
+        }
+        return result;
     }
 }

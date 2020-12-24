@@ -7,14 +7,14 @@ import javafx.scene.Scene;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class FunctionApproximator extends Application {
 
     private Stage functionStage;
-    private NNFunction function = new NNFunction(10);
+    private NNFunction function = new NNFunction();
     private Timeline updateLoop;
 
     @Override
@@ -29,10 +29,11 @@ public class FunctionApproximator extends Application {
         updateLoop = Components.createUpdateContinuouslyLoop(function, functionData, functionLine, xAxis);
         VBox inputBox = Components.createInputBox(functionData);
         Group trainingRelatedGroup = Components.createTrainingRelatedGroup(function, functionStage, functionData, functionLine, xAxis);
-        HBox checkBox = Components.createUpdateLoopCheckBox(updateLoop);
+        Group checkBox = Components.createUpdateLoopCheckBox(updateLoop);
         VBox dataBox = Components.createDataBox(functionData, functionLine);
+        VBox hyperParameterBox = Components.createHyperParameterBox(function);
         //Add components into the root
-        root.getChildren().addAll(chart, inputBox, trainingRelatedGroup, checkBox, dataBox);
+        root.getChildren().addAll(chart, inputBox, trainingRelatedGroup, checkBox, dataBox, hyperParameterBox);
         //Create the scene
         Scene scene = new Scene(root, 0, 0);
         //Add styling to the points of the chart
@@ -41,8 +42,6 @@ public class FunctionApproximator extends Application {
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.show();
-
-//        addData(functionData, generatePointsFromFunction(new Function1D((x) -> Math.sin(x), "Sine")));
     }
 
     public static void main(String[] args) {

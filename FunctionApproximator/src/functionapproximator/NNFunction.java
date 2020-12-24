@@ -7,42 +7,53 @@ import functionapproximator.NNlib.Optimizers.Optimizer;
 
 public class NNFunction {
 
-    private float learningRate = .0001f;
-    private LossFunction lossFunction = LossFunctions.QUADRATIC(.5);
-    private Optimizer optimizer = Optimizers.ADAM;
-    private Activation activation = Activations.TANH;
     private NN nn;
-    private float scale = 1;
+    private long seed = 0;
+    private int[] hiddenLayersNodes = {10};
+    private Activation activation = Activations.SIGMOID;
+    private LossFunction lossFunction = LossFunctions.QUADRATIC(.5);
+    private float learningRate = .001f;
+    private Optimizer optimizer = Optimizers.VANILLA;
 
     public NNFunction() {
-        setHiddenLayers(20);
+        buildNetwork();
     }
 
-    public NNFunction(int... hiddenLayersNodes) {
-        setHiddenLayers(hiddenLayersNodes);
-    }
-
-    public void setHiddenLayers(int... hiddenLayersNodes) {
+    public void buildNetwork() {
         int hiddenLayersNum = hiddenLayersNodes.length;
         Layer[] layers = new Layer[hiddenLayersNum + 1];//Hidden Layers + Output Layer
         for (int i = 0; i < hiddenLayersNum; i++) {
             layers[i] = new Layer.Dense(hiddenLayersNodes[i], activation, Initializers.VANILLA);//Hidden Layers
         }
         layers[hiddenLayersNum] = new Layer.Dense(1, Activations.LINEAR, Initializers.VANILLA);//Output Layer
-        nn = new NN("", 0, learningRate, lossFunction, optimizer,
+        nn = new NN("", seed, learningRate, lossFunction, optimizer,
                 new Layer.Dense(1, hiddenLayersNodes[0], activation, Initializers.VANILLA), layers);//Input Layer and adding the other Layers
     }
 
-    public void setScale(float scale) {
-        this.scale = scale;
+    public void setHyperParameters(long seed, int hiddenLayerNodes, Activation activation, LossFunction lossFunction, float learningRate, Optimizer optimizer) {
+        this.seed = seed;
+        this.hiddenLayersNodes[0] = hiddenLayerNodes;
+        this.activation = activation;
+        this.lossFunction = lossFunction;
+        this.learningRate = learningRate;
+        this.optimizer = optimizer;
+        buildNetwork();
+    }
+
+    public void setLearningRateDirectly(float learningRate) {
+        nn.setLearningRate(learningRate);
+    }
+    
+    public void setLossFunction(LossFunction a){
+        nn.setLossFunction(a);
     }
 
     public float evaluate(float x) {
-        return scale * ((float[][]) nn.feedforward(new float[][]{{x}}))[0][0];
+        return ((float[][]) nn.feedforward(new float[][]{{x}}))[0][0];
     }
 
     public void train(float x, float y) {
-        nn.backpropagation(new float[][]{{x}}, new float[][]{{y / scale}});
+        nn.backpropagation(new float[][]{{x}}, new float[][]{{y}});
     }
 
     private String[] layerToString(Layer.Dense layer, String[] input, boolean activation) {
